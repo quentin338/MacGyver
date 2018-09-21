@@ -3,56 +3,83 @@ import random
 
 class Mac:
 
-    def __init__(self):
-        self.x = 0
-        self.y = 13
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.name = "M"
 
     def move(self):
         global game
 
         while game:
-            output_maze()
-            user_input = input("Move MacGyver with ZQSD !")
-            if user_input == "z":
-                if check_movement(self.x, self.y - 1):
-                    maze[self.y][self.x], maze[self.y - 1][self.x] = " ", "M"
-                    self.y -= 1
-                    self.new_turn()
+                user_input = input("Move MacGyver with ZQSD !")
+                if user_input == "z":
+                    if self.check_movement(self.x, self.y - 1):
+                        maze[self.y][self.x], maze[self.y - 1][self.x] = " ", self.name
+                        self.y -= 1
+                        self.new_turn()
+                    else:
+                        self.new_turn()
+                elif user_input == "q":
+                    if self.check_movement(self.x - 1, self.y):
+                        maze[self.y][self.x], maze[self.y][self.x - 1] = " ", self.name
+                        self.x -= 1
+                        self.new_turn()
+                    else:
+                        self.new_turn()
+                elif user_input == "s":
+                    if self.check_movement(self.x, self.y + 1):
+                        maze[self.y][self.x], maze[self.y + 1][self.x] = " ", self.name
+                        self.y += 1
+                        self.new_turn()
+                    else:
+                        self.new_turn()
+                elif user_input == "d":
+                    if self.check_movement(self.x + 1, self.y):
+                        maze[self.y][self.x], maze[self.y][self.x + 1] = " ", self.name
+                        self.x += 1
+                        self.new_turn()
                 else:
+                    print("Wrong command, try again.")
                     self.new_turn()
-            elif user_input == "q":
-                if check_movement(self.x - 1, self.y):
-                    maze[self.y][self.x], maze[self.y][self.x - 1] = " ", "M"
-                    self.x -= 1
-                    self.new_turn()
-                else:
-                    self.new_turn()
-            elif user_input == "s":
-                if check_movement(self.x, self.y + 1):
-                    maze[self.y][self.x], maze[self.y + 1][self.x] = " ", "M"
-                    self.y += 1
-                    self.new_turn()
-                else:
-                    self.new_turn()
-            elif user_input == "d":
-                if check_movement(self.x + 1, self.y):
-                    maze[self.y][self.x], maze[self.y][self.x + 1] = " ", "M"
-                    self.x += 1
-                    self.new_turn()
+
+    def check_movement(self, x, y):  # check where player wants to go and True if possible
+        global game
+        global objects_retrieved
+
+        if maze[y][x] == " ":
+            return True
+        elif maze[y][x] == "O":
+            objects_retrieved += "O"
+            print("You got an object !")
+            print("You currently have {} object(s).".format(len(objects_retrieved)))
+            return True
+        elif maze[y][x] == "G":
+            if len(objects_retrieved) == 3:
+                print("You won !")
+                game = False
+                return True
             else:
-                print("Wrong command, try again.")
-                self.new_turn()
+                print("You lost !")
+                game = False
+                return False
+        else:
+            return False
 
     def new_turn(self):
-        print(maze)
-        self.move()
+        global game
+        if game:
+            print_maze()
+            self.move()
+        else:
+            pass
 
 
 class Guardian:
 
-    def __init__(self):
-        self.x = 13
-        self.y = 0
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 
 class Object:
@@ -75,7 +102,7 @@ class Object:
                 maze[y][x] = "O"
                 Object(x, y)
                 objects_spawned += "O"
-        print(maze)
+        print_maze()
 
 
 def get_maze():  # import into maze var
@@ -103,28 +130,9 @@ def output_maze():
             file.write("\n")
 
 
-def check_movement(x, y):  # check where player wants to go and True if possible
-    global game
-    global objects_retrieved
-
-    if maze[y][x] == " ":
-        return True
-    elif maze[y][x] == "O":
-        objects_retrieved += "O"
-        print("You got an object !")
-        print("You currently have {} object(s).".format(len(objects_retrieved)))
-        return True
-    elif maze[y][x] == "G":
-        if len(objects_retrieved) == 3:
-            print("You won !")
-            game = False
-            return True
-        else:
-            print("You lost !")
-            game = False
-            return False
-    else:
-        return False
+def print_maze():
+    for line in maze:
+        print(" ".join(line))
 
 
 def main():
@@ -139,8 +147,8 @@ maze = []
 objects_spawned = []
 objects_retrieved = []
 game = True
-mac = Mac()
-guardian = Guardian()
+mac = Mac(0, 13)
+guardian = Guardian(13, 0)
 
 
 main()
