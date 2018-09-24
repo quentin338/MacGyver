@@ -25,6 +25,7 @@ class Main:
         global all_spawned_rect
         global all_spawned
         global objects_owned
+        global font
         game = True
         screen_h = screen_height
         screen_w = screen_width
@@ -35,6 +36,7 @@ class Main:
         pygame.init()
         pygame.display.set_caption(screen_title)
         screen = pygame.display.set_mode((screen_width, screen_height))
+        font = pygame.font.Font(None, 20)
 
     def load_rect(self):
         all_spawned_rect.append(self.rect)
@@ -44,6 +46,26 @@ class Main:
 
     @staticmethod
     def update():
+        """ Blit everything and update the screen at the end """
+
+        screen.fill((0, 0, 0))
+
+        screen.blit(font.render("Objects picked :", False, (255, 255, 255)), (screen_w / 2 - 50, 0))
+        screen.blit(font.render("You", False, (255, 255, 255)), (18, 0))
+        screen.blit(font.render("Boss", False, (255, 255, 255)), (screen_w - 50, 0))
+        screen.blit(player.surface, ((player.width / 2), 25))
+        screen.blit(boss.surface, (screen_w - boss.width - (boss.width / 2), 25))
+
+        for wall in walls:
+            wall.blit()
+        for object in objects_spawned:
+            object.blit()
+        for object in objects_owned:
+            object.blit()
+
+        boss.blit()
+        player.blit()
+
         pygame.display.update()
 
 
@@ -63,13 +85,13 @@ class Characters(Main):
                 for char in line:
                     j += 1
                     if char == name_in_maze == "G":  # check where the name_in_maze is in maze_overview.txt and spawn accordingly
-                        self.rect = self.rect.move(j*32, i*43)
+                        self.rect = self.rect.move(j*32, 86 + i*43)
                         self.x = self.x*32
-                        self.y = self.y*43
+                        self.y = 86 + self.y*43
                     elif char == name_in_maze == "M":
-                        self.rect = self.rect.move(j*32, i*43)
+                        self.rect = self.rect.move(j*32, 86 + i*43)
                         self.x = j*32
-                        self.y = i*43
+                        self.y = 86 + i*43
 
     def moving(self, x, y):
         global game
@@ -79,9 +101,10 @@ class Characters(Main):
         self.rect = self.rect.move(x, y)  # Moving for real
 
         for object in objects_spawned:
-            if self.rect.colliderect(object.rect):  # checking collision with objects
+            if self.rect.colliderect(object.rect):  # checking collision with objects / spawn object on top menu / remove it in maze
+                object_top = Object(object.image, (screen_w / 2) - 50 + len(objects_owned) * 32, 25)
                 objects_spawned.remove(object)
-                objects_owned.append("O")  # object owned +1
+                objects_owned.append(object_top)  # object owned +1
                 print("You have {} object(s) !".format(len(objects_owned)))
 
         if self.rect.colliderect(boss.rect):  # checking collision with boss
@@ -93,7 +116,7 @@ class Characters(Main):
                 game = False
 
     def check_future_collision(self, x, y):
-        """ Make future rect and see if something will be there"""
+        """ Make future rect and see if something will be there """
 
         future_x = self.x + x
         future_y = self.y + y
@@ -128,7 +151,7 @@ class Walls(Main):
                         line = []
                         x = -1
                     if char == "#":
-                        wall = Walls("ressource/wall.png", x*32, y*43)  # position itself compared to numbers line/char in maze_overview.txt
+                        wall = Walls("ressource/wall.png", x*32, 86 + y*43)  # position itself compared to numbers line/char in maze_overview.txt
                         walls.append(wall)
                         wall.load_rect()
 
@@ -144,13 +167,13 @@ class Object(Main):
     def spawn(cls, number_to_spawn):
         global objects_spawned
 
-        objects_images = ["ressource/MacGyver.png", "ressource/MacGyver.png", "ressource/MacGyver.png"]  # all images for objects
+        objects_images = ["ressource/tube_plastique2.png", "ressource/ether2.png", "ressource/seringue2.png"]  # all images for objects
         objects_spawned = []
 
         while len(objects_spawned) < number_to_spawn:
             x = random.randrange(0, 32*14, 32)  # random zone in screen
-            y = random.randrange(0, 43*14, 43)
-            a = Object(objects_images[len(objects_images) - 1], x, y)  # spawn object with images list
+            y = random.randrange(86, 43*14, 43)
+            a = Object(objects_images[len(objects_spawned)], x, y)  # spawn object with images list
             objects_spawned.append(a)
             if a.rect.collidelist(all_spawned_rect) != -1:
                 objects_spawned.pop()  # delete if collision with something
@@ -162,7 +185,7 @@ class Object(Main):
 #### PYGAME INITIALIZATION ####
 
 
-Main.initialization("MacGyver", 32*15, 43*15)
+Main.initialization("MacGyver", 32*15, 43*16)
 
 boss = Characters("ressource/Gardien.png", name_in_maze="G")
 player = Characters("ressource/MacGyver.png", name_in_maze="M")
@@ -192,15 +215,3 @@ while game is True:
             player.check_future_collision(0, -player.height)
 
     pressedKeys = pygame.key.get_pressed()
-
-    screen.fill((0, 0, 0))
-
-    for wall in walls:
-        wall.blit()
-    for object in objects_spawned:
-        object.blit()
-
-    boss.blit()
-    player.blit()
-
-    Main.update()
