@@ -1,143 +1,131 @@
 import pygame
-import sys
 import random
+from sys import exit
+from collections import defaultdict
+from time import sleep
 from pygame.locals import *
 
 
 class Main:
-    def __init__(self, image, x, y):
-        self.image = image
-        self.x = x
-        self.y = y
-        self.surface = pygame.image.load(image).convert_alpha()
-        self.rect = self.surface.get_rect()
-        self.rect = self.rect.move(x, y)
-        self.width = self.surface.get_width()
-        self.height = self.surface.get_height()
 
-    @staticmethod
-    def initialization(screen_title, screen_width, screen_height):
-        global screen
-        global screen_w
-        global screen_h
-        global clock
-        global game
-        global all_spawned_rect
-        global all_spawned
-        global objects_owned
-        global font
-        game = True
-        screen_h = screen_height
-        screen_w = screen_width
-        all_spawned = []
-        all_spawned_rect = []
-        objects_owned = []
-        clock = pygame.time.Clock()
-        pygame.init()
-        pygame.display.set_caption(screen_title)
-        screen = pygame.display.set_mode((screen_width, screen_height))
-        font = pygame.font.Font(None, 20)
+    WIDTH = 32 * 15
+    HEIGHT = 43 * 17
 
-    def load_rect(self):
-        all_spawned_rect.append(self.rect)
+    def __init__(self):
+        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.launch = pygame.init()
+        self.FONT = pygame.font.Font(None, 20)
+        self.display = pygame.display.set_caption("MacGyver")
 
-    def blit(self):
-        screen.blit(self.surface, self.rect)
+    def update(self):
 
-    @staticmethod
-    def update():
-        """ Blit everything and update the screen at the end """
+        self.screen.fill((0, 0, 0))
 
-        screen.fill((0, 0, 0))
+        self.screen.blit(self.FONT.render("Objects picked :", False, (255, 255, 255)), (self.WIDTH / 2 - 50, 0))
+        self.screen.blit(self.FONT.render("You", False, (255, 255, 255)), (18, 0))
+        self.screen.blit(self.FONT.render("Boss", False, (255, 255, 255)), (self.WIDTH - 50, 0))
+        self.screen.blit(player.surface, ((player.width / 2), 25))
+        self.screen.blit(boss.surface, (self.WIDTH - boss.width - (boss.width / 2), 25))
 
-        screen.blit(font.render("Objects picked :", False, (255, 255, 255)), (screen_w / 2 - 50, 0))
-        screen.blit(font.render("You", False, (255, 255, 255)), (18, 0))
-        screen.blit(font.render("Boss", False, (255, 255, 255)), (screen_w - 50, 0))
-        screen.blit(player.surface, ((player.width / 2), 25))
-        screen.blit(boss.surface, (screen_w - boss.width - (boss.width / 2), 25))
-
-        for wall in walls:
-            wall.blit()
-        for object in objects_spawned:
-            object.blit()
-        for object in objects_owned:
-            object.blit()
-
-        boss.blit()
-        player.blit()
+        for all_objects in reversed(all_dict["All_objects"]):  # reversed to blit the player last
+            self.screen.blit(all_objects.surface, all_objects.rect)
 
         pygame.display.update()
 
 
-class Characters(Main):
-    def __init__(self, image, name_in_maze):
-        Main.__init__(self, image, x=0, y=0)
+class Character:
 
-        all_spawned.append(self)
-        self.load_rect()
+    def __init__(self, image, name_in_maze):
+        self.image = image
+        self.surface = pygame.image.load(image).convert_alpha()
+        self.rect = self.surface.get_rect()
+        self.width = self.surface.get_width()
+        self.height = self.surface.get_height()
+        self.death = pygame.image.load("ressource/death.png").convert_alpha()
 
         with open("ressource/maze_overview.txt", "r") as file:
-            i = -1  # all -1 for iterations because first x/y is 0/0
 
+            i = -1  # all -1 for iterations because first x/y is 0/0
             for line in file:
                 j = -1  # reset char numbers for each line
                 i += 1
                 for char in line:
                     j += 1
-                    if char == name_in_maze == "G":  # check where the name_in_maze is in maze_overview.txt and spawn accordingly
-                        self.rect = self.rect.move(j*32, 86 + i*43)
-                        self.x = self.x*32
-                        self.y = 86 + self.y*43
-                    elif char == name_in_maze == "M":
+                    if char == name_in_maze:  # check where the name_in_maze is in maze_overview.txt and spawn accordingly
                         self.rect = self.rect.move(j*32, 86 + i*43)
                         self.x = j*32
                         self.y = 86 + i*43
 
-    def moving(self, x, y):
-        global game
+            all_dict["All_objects"].append(self)
 
+    def moving(self, x, y):
         self.x += x
         self.y += y
-        self.rect = self.rect.move(x, y)  # Moving for real
+        self.rect = self.rect.move(x, y)
 
-        for object in objects_spawned:
-            if self.rect.colliderect(object.rect):  # checking collision with objects / spawn object on top menu / remove it in maze
-                object_top = Object(object.image, (screen_w / 2) - 50 + len(objects_owned) * 32, 25)
-                objects_spawned.remove(object)
-                objects_owned.append(object_top)  # object owned +1
-                print("You have {} object(s) !".format(len(objects_owned)))
+        for object in all_dict["Objects_spawned"]:
+            if self.rect.colliderect(object.rect):
+                self.collision_with_object(object)
 
-        if self.rect.colliderect(boss.rect):  # checking collision with boss
-            if len(objects_owned) == 3:  # condition to win - 3 objects owned
-                print("You won the game !!")
-                game = False
-            else:
-                print("You lost !!")
-                game = False
-
-    def check_future_collision(self, x, y):
-        """ Make future rect and see if something will be there """
+    def check_collision(self, x, y):
 
         future_x = self.x + x
         future_y = self.y + y
         future_rect = self.rect.move(x, y)
 
-        if future_rect.collidelist(walls) != -1:  # colliding with wall
+        if future_rect.collidelist(list(all_dict["Walls"])) != -1:  # colliding with wall
             pass
-        elif screen_w > future_x >= 0 and screen_h > future_y >= 0:  # check if player won't make it out of the screen
+        elif future_rect.colliderect(boss.rect):
+            self.collision_with_boss()
+        elif game.WIDTH > future_x >= 0 and game.HEIGHT > future_y >= 86:  # check if player won't make it out of the screen
             self.moving(x, y)
 
+    def collision_with_object(self, object_in_collision):
+        object_top = Object(object_in_collision.image, (game.WIDTH / 2) - 50 + len(all_dict["Objects_owned"]) * 32, 25)
+        all_dict["All_objects"].remove(object_in_collision)
+        all_dict["Objects_spawned"].remove(object_in_collision)
+        all_dict["Objects_owned"].append(object_top)
+        all_dict["All_objects"].append(object_top)
+        print("You have {} object(s) !".format(len(all_dict["Objects_owned"])))
 
-class Walls(Main):
+    def collision_with_boss(self):
+        global the_show_must_go_on
+
+        if len(all_dict["Objects_owned"]) == 3:  # condition to win - 3 objects owned
+                game.screen.blit(boss.death, boss.rect)
+                pygame.display.update(boss.rect)
+                sleep(2)
+                game.screen.fill((0, 0, 0))
+                game.screen.blit(game.FONT.render("CONGRATULATIONS, you escaped the maze !",
+                                                  False, (255, 255, 255)), (game.WIDTH/2 - 140, game.HEIGHT/4))
+                game.screen.blit(pygame.transform.scale2x(self.surface), (game.WIDTH/2 - player.width, game.HEIGHT/3))
+                pygame.display.update()
+                sleep(3)
+                the_show_must_go_on = False
+        else:
+            game.screen.blit(self.death, self.rect)
+            pygame.display.update(self.rect)
+            sleep(2)
+            game.screen.fill((0, 0, 0))
+            game.screen.blit(game.FONT.render("You failed to escape ! TRY AGAIN !",
+                                              False, (255, 255, 255)), (game.WIDTH/2 - 100, game.HEIGHT/4))
+            game.screen.blit(pygame.transform.scale2x(boss.surface), (game.WIDTH/2 - boss.width, game.HEIGHT/3))
+            pygame.display.update()
+            sleep(3)
+            the_show_must_go_on = False
+
+
+class Walls:
     def __init__(self, image, x, y):
-        Main.__init__(self, image, x, y)
-
-        all_spawned.append(self)
+        self.surface = pygame.image.load(image).convert_alpha()
+        self.x = x
+        self.y = y
+        self.rect = self.surface.get_rect()
+        self.rect = self.rect.move(x, y)
 
     @classmethod
     def spawn(cls):
-        global walls
-        walls = []
         line = []
         x = -1
         y = -1
@@ -151,67 +139,64 @@ class Walls(Main):
                         line = []
                         x = -1
                     if char == "#":
-                        wall = Walls("ressource/wall.png", x*32, 86 + y*43)  # position itself compared to numbers line/char in maze_overview.txt
-                        walls.append(wall)
-                        wall.load_rect()
+                        wall = Walls("ressource/wall.png", x*32, 86 + y*43)
+                        all_dict["All_objects"].append(wall)
+                        all_dict["Walls"].append(wall.rect)
 
 
-class Object(Main):
+class Object:
     def __init__(self, image, x, y):
-        Main.__init__(self, image, x, y)
-
-        global all_spawned
-        all_spawned.append(self)
+        self.image = image
+        self.surface = pygame.image.load(image).convert_alpha()
+        self.x = x
+        self.y = y
+        self.rect = self.surface.get_rect()
+        self.rect = self.rect.move(self.x, self.y)
 
     @classmethod
     def spawn(cls, number_to_spawn):
-        global objects_spawned
-
         objects_images = ["ressource/tube_plastique2.png", "ressource/ether2.png", "ressource/seringue2.png"]  # all images for objects
-        objects_spawned = []
+        all_rect = [object.rect for object in all_dict["All_objects"]]
 
-        while len(objects_spawned) < number_to_spawn:
-            x = random.randrange(0, 32*14, 32)  # random zone in screen
+        while len(all_dict["Objects_spawned"]) < number_to_spawn:
+            x = random.randrange(0, 32*14, 32)
             y = random.randrange(86, 43*14, 43)
-            a = Object(objects_images[len(objects_spawned)], x, y)  # spawn object with images list
-            objects_spawned.append(a)
-            if a.rect.collidelist(all_spawned_rect) != -1:
-                objects_spawned.pop()  # delete if collision with something
-                del a
+            new_object = Object(objects_images[len(all_dict["Objects_spawned"])], x, y)
+            if new_object.rect.collidelist(all_rect) == -1:
+                all_dict["All_objects"].append(new_object)
+                all_dict["Objects_spawned"].append(new_object)
+                all_rect.append(new_object.rect)
             else:
-                a.load_rect()  # add self.rect to avoid 2 objects in the same place
+                del new_object
 
 
-#### PYGAME INITIALIZATION ####
+""" INITIALIZATION """
 
 
-Main.initialization("MacGyver", 32*15, 43*16)
-
-boss = Characters("ressource/Gardien.png", name_in_maze="G")
-player = Characters("ressource/MacGyver.png", name_in_maze="M")
-
+the_show_must_go_on = True
+game = Main()
+all_dict = defaultdict(list)
+player = Character("ressource/MacGyver.png", "M")
+boss = Character("ressource/Gardien.png", "G")
 Walls.spawn()
 Object.spawn(3)
 
+""" GAME LOOP """
 
-#### GAME LOOP ####
+while the_show_must_go_on:
 
-
-while game is True:
-
-    clock.tick(60)
-    Main.update()
+    game.clock.tick(60)
+    game.update()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            sys.exit()
+            exit()
         if event.type == KEYDOWN and event.key == K_RIGHT:  # KEYDOWN = can't move more than once with one keypress
-            player.check_future_collision(player.width, 0)
+            player.check_collision(player.width, 0)
         elif event.type == pygame.KEYDOWN and event.key == K_DOWN:
-            player.check_future_collision(0, player.height)
+            player.check_collision(0, player.height)
         elif event.type == pygame.KEYDOWN and event.key == K_LEFT:
-            player.check_future_collision(-player.width, 0)
+            player.check_collision(-player.width, 0)
         elif event.type == pygame.KEYDOWN and event.key == K_UP:
-            player.check_future_collision(0, -player.height)
+            player.check_collision(0, -player.height)
 
-    pressedKeys = pygame.key.get_pressed()
