@@ -1,39 +1,24 @@
-import random
 from constants import *
+import random
 
 
 class Object:
-
     def __init__(self, image, x, y):
         self.image = image
         self.x = x
         self.y = y
-        self.surface = pygame.transform.scale(pygame.image.load(image).convert_alpha(),
+        self.surface = pygame.transform.scale((pygame.image.load(image).convert_alpha()),
                                               (SPRITE_WIDTH, SPRITE_HEIGHT))
         self.rect = self.surface.get_rect()
-        self.rect = self.rect.move(self.x, self.y)
+        self.rect = self.rect.move(x, y)
 
-    @staticmethod
-    def spawn(number_to_spawn, dict_to_store):
-        x = -1
-        y = -1
-        i = 0
-        line = []
-        empty_coords = []
-        with open("ressource/maze_overview.txt", "r") as file:
-            for lines in file:
-                y += 1
-                for char in lines:
-                    line.append(char)
-                    x += 1
-                    if len(line) > NUMBER_OF_SPRITES:
-                        line = []
-                        x = -1
-                    if char == " ":
-                        empty_coords.append((x*SPRITE_WIDTH, y*SPRITE_HEIGHT))
-        while i < number_to_spawn:
-            object_x, object_y = random.choice(empty_coords)
-            empty_coords.remove((object_x, object_y))         # remove the coords chosen in the list
-            object = Object(OBJECTS_IMAGES[i], object_x, object_y)   # spawn the object with random tuple
-            dict_to_store["Objects"].append(object)
-            i += 1
+    @classmethod
+    def spawn(cls, number_to_spawn, dico):
+        # UNPACKING A RANDOM COORDS TUPLE FROM "EMPTY" KEY FROM DICT AND SPAWN WITH IT
+
+        for i in range(0, number_to_spawn):
+            x, y = random.choice(dico["Empty"])
+            dico["Empty"].remove((x, y))  # Removing tuple to avoid 2 objects 1 spawn...
+            cls.image = OBJECTS_IMAGES[i]
+            o = Object(cls.image, x, y)
+            dico["Objects"].append(o)
