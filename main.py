@@ -1,6 +1,7 @@
-from maze import *
-from objects2 import *
 from pygame.locals import *
+
+from maze import *
+from objects import *
 
 
 def main():

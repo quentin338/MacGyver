@@ -1,5 +1,6 @@
-from constants import *
 import random
+
+from constants import *
 
 
 class Object:

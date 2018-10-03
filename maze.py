@@ -2,7 +2,7 @@ from time import sleep
 from collections import defaultdict
 
 from constants import *
-from walls2 import Wall
+from walls import Wall
 
 
 class Maze:
