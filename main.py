@@ -5,6 +5,8 @@ from objects import *
 
 
 def main():
+    """ Pygame initialization / Maze creation /
+    Objects creation / Blitting on screen """
 
     pygame.init()
 

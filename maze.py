@@ -57,37 +57,37 @@ class Maze:
 
         # COLLISION WITH BOSS - GAME ENDING
 
-            # GAME WON / BOSS DYING
+            # Game won - Boss dying
 
         if (actual_x + x, actual_y + y) == self.coords["G"][0] and len(self.coords["Objects_owned"]) == 3:
-            screen.blit(self.image_scaling("ressource/death.png"),
+            screen.blit(self.image_scaling(IMAGES["Death"]),
                         (actual_x + x, actual_y + y, SPRITE_WIDTH, SPRITE_HEIGHT))
             pygame.display.update()
             sleep(2)
             self.game_won()
 
-            # GAME LOST / MAC DYING
+            # Game lost - Mac dying
 
         elif (actual_x + x, actual_y + y) == self.coords["G"][0] and len(self.coords["Objects_owned"]) != 3:
-            screen.blit(self.image_scaling("ressource/death.png"),
+            screen.blit(self.image_scaling(IMAGES["Death"]),
                         (actual_x, actual_y, SPRITE_WIDTH, SPRITE_HEIGHT))
             pygame.display.update()
             sleep(2)
             self.game_lost()
 
     def _moving(self, x, y):
+        """ Moving and filling ancient zone with black """
+
         a, b = self.coords["M"][0]
-        self.coords["M"] = [(a + x, b + y)]  # Actually moving
+        self.coords["M"] = [(a + x, b + y)]
 
-        # Drawing Mac on the new zone / filling ancient zone with black
-
-        screen.blit(self.image_scaling("ressource/MacGyver.png"), self.coords["M"][0])
+        screen.blit(self.image_scaling(IMAGES["M"]), self.coords["M"][0])
         screen.fill((0, 0, 0), (a, b, SPRITE_WIDTH, SPRITE_HEIGHT))
 
         pygame.display.update()
 
     def update(self):
-        # UPDATING EVERYTHING ON SCREEN ONLY @ LAUNCH/OBJECT GOT
+        """ Blitting everything on screen only @ launch/object got """
 
         screen.fill((0, 0, 0))
 
@@ -96,9 +96,9 @@ class Maze:
         for object in self.coords["Objects"]:
             screen.blit(object.surface, object.rect)
         for mac in self.coords["M"]:
-            screen.blit(self.image_scaling("ressource/MacGyver.png"), mac)
+            screen.blit(self.image_scaling(IMAGES["M"]), mac)
         for boss in self.coords["G"]:
-            screen.blit(self.image_scaling("ressource/Gardien.png"), boss)
+            screen.blit(self.image_scaling(IMAGES["G"]), boss)
 
         screen.blit(self.font.render("Objects : {}".format(len(self.coords["Objects_owned"])),
                                      True, (255, 255, 255)), (0, 0))
@@ -106,24 +106,24 @@ class Maze:
         pygame.display.update()
 
     def game_won(self):
-        # ENDING SCREEN
+        """ Ending screen """
 
         screen.fill((0, 0, 0))
         screen.blit(self.font.render("CONGRATULATIONS, you escaped the maze !", True,
                                 (255, 255, 255)), (SCREEN_WIDTH/2 - 140, SCREEN_HEIGHT/4))
-        screen.blit(pygame.transform.scale2x(self.image_scaling("ressource/MacGyver.png")),
+        screen.blit(pygame.transform.scale2x(self.image_scaling(IMAGES["M"])),
                     (SCREEN_WIDTH/2 - SPRITE_WIDTH, SCREEN_HEIGHT/3))
         pygame.display.update()
         sleep(3)
         exit()
 
     def game_lost(self):
-        # ENDING SCREEN
+        """ Ending screen """
 
         screen.fill((0, 0, 0))
         screen.blit(self.font.render("You failed to escape ! TRY AGAIN !", True, (255, 255, 255)),
                     (SCREEN_WIDTH/2 - 100, SCREEN_HEIGHT/4))
-        screen.blit(pygame.transform.scale2x(self.image_scaling("ressource/Gardien.png")),
+        screen.blit(pygame.transform.scale2x(self.image_scaling(IMAGES["G"])),
                     (SCREEN_WIDTH/2 - SPRITE_WIDTH, SCREEN_HEIGHT/3))
         pygame.display.update()
         sleep(3)
@@ -131,7 +131,7 @@ class Maze:
 
     @staticmethod
     def image_scaling(image):
-        # SCALING IMAGE WITH CONSTANTS.PY SPRITES VALUES
+        """ Scaling images with constants.py sprites values """
 
         image_scaled = pygame.transform.scale(pygame.image.load(image),
                                               (SPRITE_WIDTH, SPRITE_HEIGHT))

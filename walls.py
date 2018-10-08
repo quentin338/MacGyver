@@ -3,7 +3,7 @@ from constants import *
 
 class Wall:
     def __init__(self, x, y):
-        self.surface = pygame.transform.scale((pygame.image.load("ressource/wall.png").convert_alpha()),
+        self.surface = pygame.transform.scale((pygame.image.load(IMAGES["Walls"]).convert_alpha()),
                                               (SPRITE_WIDTH, SPRITE_HEIGHT))
         self.x = x
         self.y = y

@@ -15,11 +15,11 @@ class Object:
 
     @classmethod
     def spawn(cls, number_to_spawn, dico):
-        # UNPACKING A RANDOM COORDS TUPLE FROM "EMPTY" KEY FROM DICT AND SPAWN WITH IT
+        """ Unpacking a random coords tuple from "EMPTY" key from
+            maze.coords dict and spawn with it """
 
         for i in range(0, number_to_spawn):
             x, y = random.choice(dico["Empty"])
-            dico["Empty"].remove((x, y))  # Removing tuple to avoid 2 objects 1 spawn...
-            cls.image = OBJECTS_IMAGES[i]
-            o = Object(cls.image, x, y)
+            dico["Empty"].remove((x, y))  # Removing tuple to avoid 2 objects stacked
+            o = Object(OBJECTS_IMAGES[i], x, y)
             dico["Objects"].append(o)
