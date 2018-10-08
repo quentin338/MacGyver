@@ -20,7 +20,3 @@ IMAGES = {"M": "ressource/MacGyver.png",
           "G": "ressource/Gardien.png",
           "Walls": "ressource/wall.png",
           "Death": "ressource/death.png"}
-
-
-
-

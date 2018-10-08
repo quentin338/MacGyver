@@ -30,6 +30,12 @@ class Maze:
             return self.coords
 
     def check_collision(self, x, y):
+        """ Checking collision by creating future coords and see what's in there.
+            if wall -> pass
+            if empty -> self.moving()
+            if object -> self.moving() + object taken
+            if Guardian -> game.won/lost()"""
+
         actual_x, actual_y = self.coords["M"][0]
 
         # COLLISION WITH WALL
@@ -106,7 +112,7 @@ class Maze:
         pygame.display.update()
 
     def game_won(self):
-        """ Ending screen """
+        """ Ending screen when winning """
 
         screen.fill((0, 0, 0))
         screen.blit(self.font.render("CONGRATULATIONS, you escaped the maze !", True,
@@ -118,7 +124,7 @@ class Maze:
         exit()
 
     def game_lost(self):
-        """ Ending screen """
+        """ Ending screen when losing """
 
         screen.fill((0, 0, 0))
         screen.blit(self.font.render("You failed to escape ! TRY AGAIN !", True, (255, 255, 255)),
